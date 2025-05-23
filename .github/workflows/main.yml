@@ -1,44 +1,39 @@
-
 name: Update IP List
 
 on:
+  push:
   schedule:
-    - cron: '0 */3 * * *' # 每3小时运行一次
-  workflow_dispatch:       # 允许手动触发
-  push:                    # 允许提交触发
-    branches:
-      - main               # 仅 main 分支触发
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
 
 jobs:
   update-ip-list:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip requests beautifulsoup4
+      - name: Install dependencies
+        run: pip install --upgrade pip requests beautifulsoup4
 
-    - name: Run script
-      run: |
-        python ${{ github.workspace }}/collect_ips.py || exit 1
+      - name: Run script
+        run: |
+          ls -al .
+          python collect_ips.py
 
-    - name: Commit and push changes
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git config user.email "tianshideyou@proton.me"
-        git config user.name "tianshipapa"
-        if [ -n "$(git status --porcelain)" ]; then
-          git add ip.txt
-          git commit -m "Automatic update"
-          git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-        else
-          echo "No changes detected, skipping commit."
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "tianshipapa"
+          git config user.email "tianshideyou@proton.me"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add ip.txt
+            git commit -m "Automatic update"
+            git push "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          else
+            echo "No changes to commit"
